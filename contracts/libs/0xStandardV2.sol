@@ -82,12 +82,12 @@ contract OxStandardV2 is
     bool public randomseedRequested = false;
 
     bytes32 public keyHash;
-    bytes32 hashedSecret;
+    bytes32 private hashedSecret;
 
     uint256 public revealBlock = 0;
     uint256 public seed = 0;
     uint256 public totalOGClaimed = 0;
-    uint256 settlementBlockNumber;
+    uint256 private settlementBlockNumber;
 
     mapping(address => bool) private _airdropAllowed;
     mapping(address => uint256) private _privateSaleClaimed;
@@ -176,7 +176,7 @@ contract OxStandardV2 is
         nonReentrant
         returns (bool)
     {
-        require(!msg.sender.isContract(), "Contract is not allowed.");
+        require(msg.sender == tx.origin, "Contract is not allowed.");
         require(
             getState() == SaleState.PrivateSaleDuring,
             "Sale not available."
@@ -213,7 +213,7 @@ contract OxStandardV2 is
         nonReentrant
         returns (bool)
     {
-        require(!msg.sender.isContract(), "Contract is not allowed.");
+        require(msg.sender == tx.origin, "Contract is not allowed.");
         require(
             getState() == SaleState.PrivateSaleDuring ||
                 getState() == SaleState.PublicSaleDuring,
@@ -278,7 +278,7 @@ contract OxStandardV2 is
         return true;
     }
 
-    function setBaseURI(string memory baseURI) external governerOnly {
+    function setBaseURI(string memory baseURI) external governorOnly {
         _tokenBaseURI = baseURI;
         emit AssignBaseURI(baseURI);
     }
@@ -525,7 +525,7 @@ contract OxStandardV2 is
             if (!dutchEnabled) {
                 return publicSalePrice;
             }
-            
+
             uint256 passedBlock = block.number - publicSale.beginBlock;
             uint256 discountPrice = passedBlock.mul(priceFactor).div(
                 discountBlockSize
@@ -569,7 +569,7 @@ contract OxStandardV2 is
 
     function setBlockNumbertoGenSeed(bytes32 _hashedSecret)
         external
-        governerOnly
+        governorOnly
     {
         require(
             bytes(_tokenBaseURI).length != 0,
@@ -584,11 +584,11 @@ contract OxStandardV2 is
 
         //set settlementBlockNumber to the future block
         settlementBlockNumber = block.number + 10;
-        hashedSecret = keccak256(abi.encodePacked(_hashedSecret));
+        hashedSecret = _hashedSecret;
         emit AssignSettlementBlockNumber(settlementBlockNumber);
     }
 
-    function setRandomResultToSeed(bytes32 _secret) external governerOnly {
+    function setRandomResultToSeed(bytes32 _secret) external governorOnly {
         require(
             settlementBlockNumber != 0,
             "Settlement block number not exists"
@@ -624,7 +624,7 @@ contract OxStandardV2 is
         _splitter.release(account);
     }
 
-    function withdraw() external governerOnly {
+    function withdraw() external governorOnly {
         uint256 balance = address(this).balance;
         payable(msg.sender).transfer(balance);
         emit WithdrawNonPurchaseFund(balance);
