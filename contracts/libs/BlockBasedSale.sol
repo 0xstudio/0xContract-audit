@@ -7,6 +7,8 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 contract BlockBasedSale is Ownable {
     using SafeMath for uint256;
 
+    event AssignGovernorAddress(address indexed _address);
+    event AssignOperatorAddress(address indexed _address);
     event AssignDiscountBlockSize(uint256 size);
     event AssignPriceDecayParameter(
         uint256 _lowerBoundPrice,
@@ -83,10 +85,10 @@ contract BlockBasedSale is Ownable {
         _;
     }
 
-    modifier governerOnly() {
+    modifier governorOnly() {
         require(
             governorAssigned && msg.sender == governorAddress,
-            "Only governer allowed."
+            "Only governor allowed."
         );
         _;
     }
@@ -95,12 +97,14 @@ contract BlockBasedSale is Ownable {
         require(_operator != address(0));
         operatorAddress = _operator;
         operatorAssigned = true;
+        emit AssignOperatorAddress(_operator);
     }
 
-    function setGovernorAddress(address _governer) external onlyOwner {
-        require(_governer != address(0));
-        governorAddress = _governer;
+    function setGovernorAddress(address _governor) external onlyOwner {
+        require(_governor != address(0));
+        governorAddress = _governor;
         governorAssigned = true;
+        emit AssignGovernorAddress(_governor);
     }
 
     function setDiscountBlockSize(uint256 size) external operatorOnly {

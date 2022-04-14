@@ -115,7 +115,7 @@ contract WagyuV2 is
         nonReentrant
         returns (bool)
     {
-        require(!msg.sender.isContract(), "Contract is not allowed.");
+        require(msg.sender == tx.origin, "Contract is not allowed.");
         require(
             getState() == SaleState.PublicSaleDuring,
             "Sale not available."
@@ -137,14 +137,14 @@ contract WagyuV2 is
         }
 
         require(
-            purchaseCount[msg.sender] < maxSaleCapped,
+            purchaseCount[msg.sender] + amount <= maxSaleCapped,
             "Max purchase reached"
         );
 
         emit MintAttempt(msg.sender, signature);
 
         if (getState() == SaleState.PublicSaleDuring) {
-            _mintToken(msg.sender, 1);
+            _mintToken(msg.sender, amount);
             totalPublicMinted = totalPublicMinted + amount;
             if (isSubsequenceSale()) {
                 nextSubsequentSale = block.number + subsequentSaleBlockSize;
@@ -210,7 +210,7 @@ contract WagyuV2 is
         _splitter.release(account);
     }
 
-    function withdraw() external governerOnly {
+    function withdraw() external governorOnly {
         uint256 balance = address(this).balance;
         payable(msg.sender).transfer(balance);
         emit WithdrawNonPurchaseFund(balance);

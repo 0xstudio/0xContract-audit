@@ -7,6 +7,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract EIP712Whitelisting is Ownable {
     using ECDSA for bytes32;
 
+    event AssignWhitelistSigningAddress(address indexed _address);
+    event AssignOgSigningAddress(address indexed _address);
+
     // The key used to sign whitelist signatures.
     // We will check to ensure that the key that signed the signature
     // is this one that we expect.
@@ -49,10 +52,12 @@ contract EIP712Whitelisting is Ownable {
         onlyOwner
     {
         whitelistSigningKey = newSigningKey;
+        emit AssignWhitelistSigningAddress(newSigningKey);
     }
 
     function setOgSigningAddress(address newSigningKey) external onlyOwner {
         ogSigningKey = newSigningKey;
+        emit AssignOgSigningAddress(newSigningKey);
     }
 
     modifier requiresWhitelist(bytes calldata signature) {

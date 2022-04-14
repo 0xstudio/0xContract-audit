@@ -7,6 +7,8 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 abstract contract OGBlockBasedSale is Ownable {
     using SafeMath for uint256;
 
+    event AssignGovernorAddress(address indexed _address);
+    event AssignOperatorAddress(address indexed _address);
     event AssignDiscountBlockSize(uint256 size);
     event AssignPriceDecayParameter(
         uint256 _lowerBoundPrice,
@@ -68,7 +70,7 @@ abstract contract OGBlockBasedSale is Ownable {
     uint256 public totalPublicMinted = 0;
     uint256 public totalReserveMinted = 0;
     uint256 public maxSupply = 1000;
-    uint256 public maxReserve = 200;
+    uint256 public maxReserve = 180; //Subject to change per production config
 
     uint256 public discountBlockSize = 180;
     uint256 public lowerBoundPrice = 0;
@@ -76,9 +78,8 @@ abstract contract OGBlockBasedSale is Ownable {
     uint256 public priceFactor = 1337500000000000;
 
     uint256 public nextSubsequentSale = 0;
-    uint256 public subsequentSaleBlockSize = 3;
+    uint256 public subsequentSaleBlockSize = 3; //Subject to change per production config
     uint256 public publicSaleCap = 100;
-    bool public isSubsequentSale = false;
     bool public dutchEnabled = false;
 
     struct SaleConfig {
@@ -96,10 +97,10 @@ abstract contract OGBlockBasedSale is Ownable {
         _;
     }
 
-    modifier governerOnly() {
+    modifier governorOnly() {
         require(
             governorAssigned && msg.sender == governorAddress,
-            "Only governer allowed."
+            "Only governor allowed."
         );
         _;
     }
@@ -108,12 +109,14 @@ abstract contract OGBlockBasedSale is Ownable {
         require(_operator != address(0));
         operatorAddress = _operator;
         operatorAssigned = true;
+        emit AssignOperatorAddress(_operator);
     }
 
-    function setGovernorAddress(address _governer) external onlyOwner {
-        require(_governer != address(0));
-        governorAddress = _governer;
+    function setGovernorAddress(address _governor) external onlyOwner {
+        require(_governor != address(0));
+        governorAddress = _governor;
         governorAssigned = true;
+        emit AssignGovernorAddress(_governor);
     }
 
     function setDiscountBlockSize(uint256 size) external operatorOnly {
@@ -125,12 +128,13 @@ abstract contract OGBlockBasedSale is Ownable {
         external
         operatorOnly
     {
-        require(_lowerBoundPrice >= 0);
         require(_priceFactor <= publicSalePrice);
         lowerBoundPrice = _lowerBoundPrice;
         priceFactor = _priceFactor;
         emit AssignPriceDecayParameter(_lowerBoundPrice, _priceFactor);
     }
+
+
 
     function setTransactionLimit(uint256 publicSaleLimit)
         external
@@ -276,7 +280,7 @@ abstract contract OGBlockBasedSale is Ownable {
         emit AssignPrivateSapeCap(cap);
     }
 
-    function isSubsequenceSale() internal view returns (bool) {
+    function isSubsequenceSale() public view returns (bool) {
         return (totalPublicMinted >= publicSaleCap);
     }
 
