@@ -26,10 +26,7 @@ contract WagyuV2 is
     event AssignBaseURI(string _value);
     event AssignDefaultURI(string _value);
     event AssignRevealBlock(uint256 _blockNumber);
-    event Purchased(
-        address indexed account,
-        uint256 indexed index
-    );
+    event Purchased(address indexed account, uint256 indexed index);
     event MintAttempt(address indexed account, bytes data);
     event PermanentURI(string _value, uint256 indexed _id);
     event WithdrawNonPurchaseFund(uint256 balance);
@@ -183,7 +180,13 @@ contract WagyuV2 is
 
         return
             isRevealed()
-                ? string(abi.encodePacked(_tokenBaseURI, tokenId, ".json"))
+                ? string(
+                    abi.encodePacked(
+                        _tokenBaseURI,
+                        Strings.toString(tokenId),
+                        ".json"
+                    )
+                )
                 : _defaultURI;
     }
 

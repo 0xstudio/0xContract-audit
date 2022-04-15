@@ -78,7 +78,7 @@ abstract contract OGBlockBasedSale is Ownable {
     uint256 public priceFactor = 1337500000000000;
 
     uint256 public nextSubsequentSale = 0;
-    uint256 public subsequentSaleBlockSize = 3; //Subject to change per production config
+    uint256 public subsequentSaleBlockSize = 1661; //Subject to change per production config
     uint256 public publicSaleCap = 100;
     bool public dutchEnabled = false;
 
